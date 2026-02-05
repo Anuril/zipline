@@ -85,7 +85,7 @@ export default function MoveFolderModal({ folder, opened, onClose }: MoveFolderM
 
         <Combobox
           store={combobox}
-          withinPortal={false}
+          withinPortal={true}
           onOptionSubmit={(value) => {
             setSelectedParentId(value);
             setSearch(

@@ -126,7 +126,7 @@ export default function DeleteFolderModal({ folder, opened, onClose }: DeleteFol
             {childrenAction === 'moveToFolder' && (
               <Combobox
                 store={combobox}
-                withinPortal={false}
+                withinPortal={true}
                 onOptionSubmit={(value) => {
                   setTargetFolderId(value);
                   setSearch(folderOptions.find((f) => f.id === value)?.path || '');
