@@ -12,16 +12,16 @@ export type Folder = PrismaFolder & {
   };
 };
 
-export type FolderParent = {
+export interface FolderParent {
   id: string;
   name: string;
   parentId: string | null;
   parent?: FolderParent | null;
-};
+}
 
-export type FolderParentPublic = FolderParent & {
+export interface FolderParentPublic extends FolderParent {
   public: boolean;
-};
+}
 
 export async function buildParentChain(parentId: string | null): Promise<FolderParent | null> {
   if (!parentId) return null;
@@ -40,6 +40,7 @@ export async function buildParentChain(parentId: string | null): Promise<FolderP
     parent: grandparent,
   };
 }
+
 
 export async function buildPublicParentChain(parentId: string | null): Promise<FolderParentPublic | null> {
   if (!parentId) return null;
