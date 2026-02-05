@@ -2,6 +2,7 @@ import { useConfig } from '@/components/ConfigProvider';
 import DomainSelect from '@/components/DomainSelect';
 import { Response } from '@/lib/api/response';
 import { Folder } from '@/lib/db/models/folder';
+import { buildFolderHierarchy } from '@/lib/folderHierarchy';
 import { useUploadOptionsStore } from '@/lib/store/uploadOptions';
 import {
   Badge,
@@ -70,42 +71,7 @@ export default function UploadOptionsButton({ folder, numFiles }: { folder?: str
 
   const folderOptions = useMemo(() => {
     if (!folders) return [];
-
-    const childrenMap = new Map<string | null, Folder[]>();
-    for (const folder of folders) {
-      const parentId = folder.parentId ?? null;
-      const siblings = childrenMap.get(parentId) || [];
-      siblings.push(folder);
-      childrenMap.set(parentId, siblings);
-    }
-
-    for (const children of childrenMap.values()) {
-      children.sort((a, b) => a.name.localeCompare(b.name));
-    }
-
-    const result: Array<{ id: string; name: string; path: string; depth: number }> = [];
-
-    const traverse = (folder: Folder, depth: number, pathParts: string[]) => {
-      const currentPath = [...pathParts, folder.name];
-      result.push({
-        id: folder.id,
-        name: folder.name,
-        path: currentPath.join(' / '),
-        depth,
-      });
-
-      const children = childrenMap.get(folder.id) || [];
-      for (const child of children) {
-        traverse(child, depth + 1, currentPath);
-      }
-    };
-
-    const rootFolders = childrenMap.get(null) || [];
-    for (const root of rootFolders) {
-      traverse(root, 0, []);
-    }
-
-    return result;
+    return buildFolderHierarchy(folders);
   }, [folders]);
 
   const expirations = useMemo(() => {

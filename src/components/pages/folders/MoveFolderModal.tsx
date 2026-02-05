@@ -1,6 +1,7 @@
 import { Response } from '@/lib/api/response';
 import { Folder } from '@/lib/db/models/folder';
 import { fetchApi } from '@/lib/fetchApi';
+import { buildFolderHierarchy } from '@/lib/folderHierarchy';
 import { Button, Modal, Select, Stack, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconFolderSymlink } from '@tabler/icons-react';
@@ -40,41 +41,15 @@ export default function MoveFolderModal({ folder, opened, onClose }: MoveFolderM
     if (!allFolders || !folder) return [{ value: '__root__', label: '/ (Root)' }];
 
     const descendantIds = getDescendantIds(folder.id, allFolders);
-    const validFolders = allFolders.filter((f) => f.id !== folder.id && !descendantIds.has(f.id));
+    // Exclude the folder being moved and its descendants
+    const excludeIds = new Set([folder.id, ...descendantIds]);
 
-    const childrenMap = new Map<string | null, Folder[]>();
-    for (const f of validFolders) {
-      const parentId = f.parentId ?? null;
-      // Skip if parent is excluded (the folder being moved or its descendants)
-      if (parentId && (parentId === folder.id || descendantIds.has(parentId))) continue;
-      const siblings = childrenMap.get(parentId) || [];
-      siblings.push(f);
-      childrenMap.set(parentId, siblings);
-    }
+    const hierarchy = buildFolderHierarchy(allFolders, excludeIds);
 
-    for (const children of childrenMap.values()) {
-      children.sort((a, b) => a.name.localeCompare(b.name));
-    }
-
-    const result: Array<{ value: string; label: string }> = [];
-
-    const traverse = (f: Folder, pathParts: string[]) => {
-      const currentPath = [...pathParts, f.name];
-      result.push({
-        value: f.id,
-        label: currentPath.join(' / '),
-      });
-
-      const children = childrenMap.get(f.id) || [];
-      for (const child of children) {
-        traverse(child, currentPath);
-      }
-    };
-
-    const rootFolders = childrenMap.get(null) || [];
-    for (const root of rootFolders) {
-      traverse(root, []);
-    }
+    const result = hierarchy.map((item) => ({
+      value: item.id,
+      label: item.path,
+    }));
 
     return [{ value: '__root__', label: '/ (Root)' }, ...result];
   }, [allFolders, folder]);
