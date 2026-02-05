@@ -59,28 +59,32 @@ export async function buildPublicParentChain(parentId: string | null): Promise<F
   };
 }
 
-export function cleanFolder<T extends Folder>(folder: T, stringifyDates = false): T {
-  if (folder.files) cleanFiles(folder.files, stringifyDates);
+export function cleanFolder<T extends Record<string, unknown>>(folder: T, stringifyDates = false): T {
+  if (folder.files && Array.isArray(folder.files)) cleanFiles(folder.files as any, stringifyDates);
 
   if (folder.createdAt)
-    (folder.createdAt as unknown) = stringifyDates ? folder.createdAt.toISOString() : folder.createdAt;
+    (folder.createdAt as unknown) = stringifyDates
+      ? (folder.createdAt as Date).toISOString()
+      : folder.createdAt;
   if (folder.updatedAt)
-    (folder.updatedAt as unknown) = stringifyDates ? folder.updatedAt.toISOString() : folder.updatedAt;
+    (folder.updatedAt as unknown) = stringifyDates
+      ? (folder.updatedAt as Date).toISOString()
+      : folder.updatedAt;
 
-  if (folder.children) {
+  if (folder.children && Array.isArray(folder.children)) {
     for (const child of folder.children) {
-      cleanFolder(child as Folder, stringifyDates);
+      cleanFolder(child as Record<string, unknown>, stringifyDates);
     }
   }
 
-  if (folder.parent) {
-    cleanFolder(folder.parent as Folder, stringifyDates);
+  if (folder.parent && typeof folder.parent === 'object') {
+    cleanFolder(folder.parent as Record<string, unknown>, stringifyDates);
   }
 
   return folder;
 }
 
-export function cleanFolders<T extends Folder>(folders: T[], stringifyDates = false): T[] {
+export function cleanFolders<T extends Record<string, unknown>>(folders: T[], stringifyDates = false): T[] {
   for (let i = 0; i !== folders.length; ++i) {
     cleanFolder(folders[i], stringifyDates);
   }
