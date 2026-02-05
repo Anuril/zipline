@@ -1,12 +1,12 @@
 import { Response } from '@/lib/api/response';
 import { Folder } from '@/lib/db/models/folder';
 import { fetchApi } from '@/lib/fetchApi';
+import { useFolders } from '@/lib/hooks/useFolders';
 import { Button, Modal, Radio, Select, Stack, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconTrashFilled } from '@tabler/icons-react';
 import { useState } from 'react';
 import { mutate } from 'swr';
-import useSWR from 'swr';
 
 interface DeleteFolderModalProps {
   folder: Folder | null;
@@ -21,9 +21,7 @@ export default function DeleteFolderModal({ folder, opened, onClose }: DeleteFol
   const [childrenAction, setChildrenAction] = useState<ChildrenAction>('moveToRoot');
   const [targetFolderId, setTargetFolderId] = useState<string | null>(null);
 
-  const { data: allFolders } = useSWR<Extract<Response['/api/user/folders'], Folder[]>>(
-    opened ? '/api/user/folders?noincl=true' : null,
-  );
+  const { data: allFolders } = useFolders(undefined, opened);
 
   if (!folder) return null;
 

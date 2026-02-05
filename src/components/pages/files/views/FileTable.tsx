@@ -1,11 +1,12 @@
+import FolderComboboxOptions from '@/components/folders/FolderComboboxOptions';
 import RelativeDate from '@/components/RelativeDate';
 import { addMultipleToFolder, copyFile, deleteFile, downloadFile } from '@/components/file/actions';
 import { Response } from '@/lib/api/response';
 import { bytes } from '@/lib/bytes';
 import { type File } from '@/lib/db/models/file';
-import { Folder } from '@/lib/db/models/folder';
 import { Tag } from '@/lib/db/models/tag';
 import { buildFolderHierarchy } from '@/lib/folderHierarchy';
+import { useFolders } from '@/lib/hooks/useFolders';
 import { useQueryState } from '@/lib/hooks/useQueryState';
 import { useFileTableSettingsStore } from '@/lib/store/fileTableSettings';
 import { useSettingsStore } from '@/lib/store/settings';
@@ -195,9 +196,7 @@ export default function FileTable({
 
   const fields = useFileTableSettingsStore((state) => state.fields);
 
-  const { data: folders } = useSWR<Extract<Response['/api/user/folders'], Folder[]>>(
-    '/api/user/folders?noincl=true',
-  );
+  const { data: folders } = useFolders();
 
   const folderOptions = useMemo(() => {
     if (!folders) return [];
@@ -453,18 +452,7 @@ export default function FileTable({
                     </Combobox.Target>
 
                     <Combobox.Dropdown>
-                      <Combobox.Options>
-                        {folderOptions
-                          .filter((f) => f.path.toLowerCase().includes(folderSearch.toLowerCase().trim()))
-                          .map((f) => (
-                            <Combobox.Option value={f.id} key={f.id}>
-                              <Text size='sm' style={{ paddingLeft: f.depth * 12 }}>
-                                {f.depth > 0 ? '└ ' : ''}
-                                {f.name}
-                              </Text>
-                            </Combobox.Option>
-                          ))}
-                      </Combobox.Options>
+                      <FolderComboboxOptions folderOptions={folderOptions} searchValue={folderSearch} />
                     </Combobox.Dropdown>
                   </Combobox>
                 )}

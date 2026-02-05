@@ -1,8 +1,9 @@
 import { useConfig } from '@/components/ConfigProvider';
 import DomainSelect from '@/components/DomainSelect';
+import FolderComboboxOptions from '@/components/folders/FolderComboboxOptions';
 import { Response } from '@/lib/api/response';
-import { Folder } from '@/lib/db/models/folder';
 import { buildFolderHierarchy } from '@/lib/folderHierarchy';
+import { useFolders } from '@/lib/hooks/useFolders';
 import { useUploadOptionsStore } from '@/lib/store/uploadOptions';
 import {
   Badge,
@@ -61,9 +62,7 @@ export default function UploadOptionsButton({ folder, numFiles }: { folder?: str
     setFolderSearch('');
   };
 
-  const { data: folders } = useSWR<Extract<Response['/api/user/folders'], Folder[]>>(
-    '/api/user/folders?noincl=true',
-  );
+  const { data: folders } = useFolders();
   const { data: settingsData } = useSWR<Response['/api/server/public']>('/api/server/public');
 
   const combobox = useCombobox();
@@ -338,20 +337,11 @@ export default function UploadOptionsButton({ folder, numFiles }: { folder?: str
             </Combobox.Target>
 
             <Combobox.Dropdown>
-              <Combobox.Options>
-                <Combobox.Option value='no folder'>No Folder</Combobox.Option>
-
-                {folderOptions
-                  .filter((f) => f.path.toLowerCase().includes(folderSearch.toLowerCase().trim()))
-                  .map((f) => (
-                    <Combobox.Option value={f.id} key={f.id}>
-                      <Text size='sm' style={{ paddingLeft: f.depth * 12 }}>
-                        {f.depth > 0 ? '└ ' : ''}
-                        {f.name}
-                      </Text>
-                    </Combobox.Option>
-                  ))}
-              </Combobox.Options>
+              <FolderComboboxOptions
+                folderOptions={folderOptions}
+                searchValue={folderSearch}
+                additionalOptions={<Combobox.Option value='no folder'>No Folder</Combobox.Option>}
+              />
             </Combobox.Dropdown>
           </Combobox>
 

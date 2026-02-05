@@ -8,6 +8,28 @@ export interface FolderHierarchyItem {
 }
 
 /**
+ * Gets all descendant folder IDs for a given folder.
+ * Recursively traverses the folder tree to find all children, grandchildren, etc.
+ *
+ * @param folderId - The ID of the parent folder
+ * @param folders - Array of all folders
+ * @returns Set of descendant folder IDs
+ */
+export function getDescendantIds(folderId: string, folders: Folder[]): Set<string> {
+  const descendants = new Set<string>();
+  const addDescendants = (parentId: string) => {
+    for (const f of folders) {
+      if (f.parentId === parentId) {
+        descendants.add(f.id);
+        addDescendants(f.id);
+      }
+    }
+  };
+  addDescendants(folderId);
+  return descendants;
+}
+
+/**
  * Builds a hierarchical, sorted list of folders with depth and path information.
  *
  * @param folders - Array of all folders

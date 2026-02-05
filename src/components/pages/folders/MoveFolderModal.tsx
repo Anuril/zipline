@@ -1,12 +1,13 @@
 import { Response } from '@/lib/api/response';
 import { Folder } from '@/lib/db/models/folder';
 import { fetchApi } from '@/lib/fetchApi';
-import { buildFolderHierarchy } from '@/lib/folderHierarchy';
+import { buildFolderHierarchy, getDescendantIds } from '@/lib/folderHierarchy';
+import { useFolders } from '@/lib/hooks/useFolders';
 import { Button, Modal, Select, Stack, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconFolderSymlink } from '@tabler/icons-react';
 import { useMemo, useState } from 'react';
-import useSWR, { mutate } from 'swr';
+import { mutate } from 'swr';
 
 interface MoveFolderModalProps {
   folder: Folder | null;
@@ -18,24 +19,7 @@ export default function MoveFolderModal({ folder, opened, onClose }: MoveFolderM
   const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const { data: allFolders } = useSWR<Extract<Response['/api/user/folders'], Folder[]>>(
-    opened ? '/api/user/folders?noincl=true' : null,
-  );
-
-  // Filter out the current folder and its descendants to prevent circular references
-  const getDescendantIds = (folderId: string, folders: Folder[]): Set<string> => {
-    const descendants = new Set<string>();
-    const addDescendants = (parentId: string) => {
-      for (const f of folders) {
-        if (f.parentId === parentId) {
-          descendants.add(f.id);
-          addDescendants(f.id);
-        }
-      }
-    };
-    addDescendants(folderId);
-    return descendants;
-  };
+  const { data: allFolders } = useFolders(undefined, opened);
 
   const folderOptions = useMemo(() => {
     if (!allFolders || !folder) return [{ value: '__root__', label: '/ (Root)' }];
