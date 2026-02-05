@@ -12,7 +12,6 @@ export type Folder = PrismaFolder & {
   };
 };
 
-/** Minimal parent info for breadcrumb chains */
 export type FolderParent = {
   id: string;
   name: string;
@@ -20,14 +19,12 @@ export type FolderParent = {
   parent?: FolderParent | null;
 };
 
-/** Parent info including public status for public folder chains */
+
 export type FolderParentPublic = FolderParent & {
   public: boolean;
 };
 
-/**
- * Recursively fetch and build the full parent chain for breadcrumbs
- */
+
 export async function buildParentChain(parentId: string | null): Promise<FolderParent | null> {
   if (!parentId) return null;
 
@@ -46,9 +43,7 @@ export async function buildParentChain(parentId: string | null): Promise<FolderP
   };
 }
 
-/**
- * Recursively fetch public parent chain for breadcrumbs (stops at non-public parent)
- */
+
 export async function buildPublicParentChain(parentId: string | null): Promise<FolderParentPublic | null> {
   if (!parentId) return null;
 

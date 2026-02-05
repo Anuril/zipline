@@ -102,7 +102,7 @@ export default function DashboardFolders() {
         path.unshift(folder);
         folder = folder.parent;
       }
-      
+
       const folderIds: string[] = [];
       for (const f of path) {
         folderIds.push(f.id!);

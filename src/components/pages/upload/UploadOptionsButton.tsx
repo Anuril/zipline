@@ -38,12 +38,6 @@ import useSWR from 'swr';
 import { useShallow } from 'zustand/shallow';
 
 
-function checkDomains(domains?: unknown): string[] {
-  if (!domains) return [];
-  if (!Array.isArray(domains)) return [];
-
-  return domains;
-}
 
 export default function UploadOptionsButton({ folder, numFiles }: { folder?: string; numFiles: number }) {
   const config = useConfig();

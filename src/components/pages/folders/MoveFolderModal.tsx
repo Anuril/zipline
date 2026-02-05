@@ -4,7 +4,7 @@ import { fetchApi } from '@/lib/fetchApi';
 import { Button, Modal, Select, Stack, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconFolderSymlink } from '@tabler/icons-react';
-import React, { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import useSWR, { mutate } from 'swr';
 
 interface MoveFolderModalProps {
@@ -20,12 +20,6 @@ export default function MoveFolderModal({ folder, opened, onClose }: MoveFolderM
   const { data: allFolders } = useSWR<Extract<Response['/api/user/folders'], Folder[]>>(
     opened ? '/api/user/folders?noincl=true' : null,
   );
-
-  useEffect(() => {
-    if (folder) {
-      setSelectedParentId(folder.parentId ?? null);
-    }
-  }, [folder]);
 
   // Filter out the current folder and its descendants to prevent circular references
   const getDescendantIds = (folderId: string, folders: Folder[]): Set<string> => {
@@ -120,7 +114,13 @@ export default function MoveFolderModal({ folder, opened, onClose }: MoveFolderM
   };
 
   return (
-    <Modal centered opened={opened} onClose={onClose} title={`Move "${folder.name}"`}>
+    <Modal
+      key={folder.id}
+      centered
+      opened={opened}
+      onClose={onClose}
+      title={`Move "${folder.name}"`}
+    >
       <Stack gap='sm'>
         <Text size='sm' c='dimmed'>
           Select a destination folder for this folder.
@@ -130,7 +130,7 @@ export default function MoveFolderModal({ folder, opened, onClose }: MoveFolderM
           label='Destination'
           placeholder='Select a folder'
           data={folderOptions}
-          value={selectedParentId ?? '__root__'}
+          value={selectedParentId ?? folder.parentId ?? '__root__'}
           onChange={(value) => setSelectedParentId(value)}
           searchable
         />
