@@ -37,8 +37,6 @@ import { Link } from 'react-router-dom';
 import useSWR from 'swr';
 import { useShallow } from 'zustand/shallow';
 
-
-
 export default function UploadOptionsButton({ folder, numFiles }: { folder?: string; numFiles: number }) {
   const config = useConfig();
 

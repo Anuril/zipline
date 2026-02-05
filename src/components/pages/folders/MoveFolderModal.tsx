@@ -114,13 +114,7 @@ export default function MoveFolderModal({ folder, opened, onClose }: MoveFolderM
   };
 
   return (
-    <Modal
-      key={folder.id}
-      centered
-      opened={opened}
-      onClose={onClose}
-      title={`Move "${folder.name}"`}
-    >
+    <Modal key={folder.id} centered opened={opened} onClose={onClose} title={`Move "${folder.name}"`}>
       <Stack gap='sm'>
         <Text size='sm' c='dimmed'>
           Select a destination folder for this folder.
