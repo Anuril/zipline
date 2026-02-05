@@ -76,11 +76,9 @@ export default function UploadOptionsButton({ folder, numFiles }: { folder?: str
   const combobox = useCombobox();
   const [folderSearch, setFolderSearch] = useState('');
 
-  // Build folder options with hierarchy using depth-first traversal
   const folderOptions = useMemo(() => {
     if (!folders) return [];
 
-    // Group children by parent
     const childrenMap = new Map<string | null, Folder[]>();
     for (const folder of folders) {
       const parentId = folder.parentId ?? null;
@@ -89,12 +87,10 @@ export default function UploadOptionsButton({ folder, numFiles }: { folder?: str
       childrenMap.set(parentId, siblings);
     }
 
-    // Sort children alphabetically within each level
     for (const children of childrenMap.values()) {
       children.sort((a, b) => a.name.localeCompare(b.name));
     }
 
-    // Depth-first traversal to build ordered list
     const result: Array<{ id: string; name: string; path: string; depth: number }> = [];
 
     const traverse = (folder: Folder, depth: number, pathParts: string[]) => {

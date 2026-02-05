@@ -4,7 +4,7 @@ import { fetchApi } from '@/lib/fetchApi';
 import { Button, Modal, Select, Stack, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconFolderSymlink } from '@tabler/icons-react';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import useSWR, { mutate } from 'swr';
 
 interface MoveFolderModalProps {
@@ -17,13 +17,11 @@ export default function MoveFolderModal({ folder, opened, onClose }: MoveFolderM
   const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Fetch all folders to build the selection list
   const { data: allFolders } = useSWR<Extract<Response['/api/user/folders'], Folder[]>>(
     opened ? '/api/user/folders?noincl=true' : null,
   );
 
-  // Reset selected parent when folder changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (folder) {
       setSelectedParentId(folder.parentId ?? null);
     }
@@ -50,7 +48,6 @@ export default function MoveFolderModal({ folder, opened, onClose }: MoveFolderM
     const descendantIds = getDescendantIds(folder.id, allFolders);
     const validFolders = allFolders.filter((f) => f.id !== folder.id && !descendantIds.has(f.id));
 
-    // Group children by parent
     const childrenMap = new Map<string | null, Folder[]>();
     for (const f of validFolders) {
       const parentId = f.parentId ?? null;
@@ -61,12 +58,10 @@ export default function MoveFolderModal({ folder, opened, onClose }: MoveFolderM
       childrenMap.set(parentId, siblings);
     }
 
-    // Sort children alphabetically within each level
     for (const children of childrenMap.values()) {
       children.sort((a, b) => a.name.localeCompare(b.name));
     }
 
-    // Depth-first traversal
     const result: Array<{ value: string; label: string }> = [];
 
     const traverse = (f: Folder, pathParts: string[]) => {

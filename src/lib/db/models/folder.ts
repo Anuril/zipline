@@ -1,4 +1,5 @@
 import type { Folder as PrismaFolder } from '@/prisma/client';
+import { prisma } from '@/lib/db';
 import { File, cleanFiles } from './file';
 
 export type Folder = PrismaFolder & {
@@ -11,28 +12,83 @@ export type Folder = PrismaFolder & {
   };
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function cleanFolder(folder: any, stringifyDates = false): any {
+/** Minimal parent info for breadcrumb chains */
+export type FolderParent = {
+  id: string;
+  name: string;
+  parentId: string | null;
+  parent?: FolderParent | null;
+};
+
+/** Parent info including public status for public folder chains */
+export type FolderParentPublic = FolderParent & {
+  public: boolean;
+};
+
+/**
+ * Recursively fetch and build the full parent chain for breadcrumbs
+ */
+export async function buildParentChain(parentId: string | null): Promise<FolderParent | null> {
+  if (!parentId) return null;
+
+  const parent = await prisma.folder.findUnique({
+    where: { id: parentId },
+    select: { id: true, name: true, parentId: true },
+  });
+
+  if (!parent) return null;
+
+  const grandparent = await buildParentChain(parent.parentId);
+
+  return {
+    ...parent,
+    parent: grandparent,
+  };
+}
+
+/**
+ * Recursively fetch public parent chain for breadcrumbs (stops at non-public parent)
+ */
+export async function buildPublicParentChain(parentId: string | null): Promise<FolderParentPublic | null> {
+  if (!parentId) return null;
+
+  const parent = await prisma.folder.findUnique({
+    where: { id: parentId },
+    select: { id: true, name: true, public: true, parentId: true },
+  });
+
+  if (!parent || !parent.public) return null;
+
+  const grandparent = await buildPublicParentChain(parent.parentId);
+
+  return {
+    ...parent,
+    parent: grandparent,
+  };
+}
+
+export function cleanFolder<T extends Folder>(folder: T, stringifyDates = false): T {
   if (folder.files) cleanFiles(folder.files, stringifyDates);
 
-  if (folder.createdAt) folder.createdAt = stringifyDates ? folder.createdAt.toISOString() : folder.createdAt;
-  if (folder.updatedAt) folder.updatedAt = stringifyDates ? folder.updatedAt.toISOString() : folder.updatedAt;
+  if (folder.createdAt)
+    (folder.createdAt as unknown) = stringifyDates ? folder.createdAt.toISOString() : folder.createdAt;
+  if (folder.updatedAt)
+    (folder.updatedAt as unknown) = stringifyDates ? folder.updatedAt.toISOString() : folder.updatedAt;
 
   if (folder.children) {
     for (const child of folder.children) {
-      cleanFolder(child, stringifyDates);
+      cleanFolder(child as Folder, stringifyDates);
     }
   }
 
   if (folder.parent) {
-    cleanFolder(folder.parent, stringifyDates);
+    cleanFolder(folder.parent as Folder, stringifyDates);
   }
 
   return folder;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function cleanFolders(folders: any[], stringifyDates = false): any[] {
+export function cleanFolders<T extends Folder>(folders: T[], stringifyDates = false): T[] {
   for (let i = 0; i !== folders.length; ++i) {
     cleanFolder(folders[i], stringifyDates);
   }
