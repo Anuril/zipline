@@ -440,11 +440,17 @@ export default function FileTable({
                           combobox.updateSelectedOptionIndex();
                           setFolderSearch(event.currentTarget.value);
                         }}
-                        onClick={() => combobox.openDropdown()}
-                        onFocus={() => combobox.openDropdown()}
+                        onClick={() => {
+                          combobox.openDropdown();
+                          setFolderSearch('');
+                        }}
+                        onFocus={() => {
+                          combobox.openDropdown();
+                          setFolderSearch('');
+                        }}
                         onBlur={() => {
                           combobox.closeDropdown();
-                          setFolderSearch(folderSearch || '');
+                          setFolderSearch('');
                         }}
                         placeholder='Add to folder...'
                         rightSectionPointerEvents='none'

@@ -1,11 +1,13 @@
+import FolderComboboxOptions from '@/components/folders/FolderComboboxOptions';
 import { Response } from '@/lib/api/response';
 import { Folder } from '@/lib/db/models/folder';
 import { fetchApi } from '@/lib/fetchApi';
+import { buildFolderHierarchy } from '@/lib/folderHierarchy';
 import { useFolders } from '@/lib/hooks/useFolders';
-import { Button, Modal, Radio, Select, Stack, Text } from '@mantine/core';
+import { Button, Combobox, InputBase, Modal, Radio, Stack, Text, useCombobox } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconTrashFilled } from '@tabler/icons-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { mutate } from 'swr';
 
 interface DeleteFolderModalProps {
@@ -20,8 +22,17 @@ export default function DeleteFolderModal({ folder, opened, onClose }: DeleteFol
   const [loading, setLoading] = useState(false);
   const [childrenAction, setChildrenAction] = useState<ChildrenAction>('moveToRoot');
   const [targetFolderId, setTargetFolderId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const combobox = useCombobox();
 
   const { data: allFolders } = useFolders(undefined, opened);
+
+  const folderOptions = useMemo(() => {
+    if (!allFolders || !folder) return [];
+    // Exclude the folder being deleted
+    const excludeIds = new Set([folder.id]);
+    return buildFolderHierarchy(allFolders, excludeIds);
+  }, [allFolders, folder]);
 
   if (!folder) return null;
 
@@ -29,13 +40,10 @@ export default function DeleteFolderModal({ folder, opened, onClose }: DeleteFol
   const hasFiles = (folder._count?.files ?? 0) > 0;
   const hasContent = hasChildren || hasFiles;
 
-  const folderOptions =
-    allFolders
-      ?.filter((f) => f.id !== folder.id)
-      .map((f) => ({
-        value: f.id,
-        label: f.name,
-      })) ?? [];
+  const getDisplayValue = () => {
+    const selected = folderOptions.find((f) => f.id === targetFolderId);
+    return selected?.path || '';
+  };
 
   const handleDelete = async () => {
     setLoading(true);
@@ -116,15 +124,47 @@ export default function DeleteFolderModal({ folder, opened, onClose }: DeleteFol
             </Radio.Group>
 
             {childrenAction === 'moveToFolder' && (
-              <Select
-                label='Target Folder'
-                placeholder='Select a folder'
-                data={folderOptions}
-                value={targetFolderId}
-                onChange={(value) => setTargetFolderId(value)}
-                searchable
-                required
-              />
+              <Combobox
+                store={combobox}
+                withinPortal={false}
+                onOptionSubmit={(value) => {
+                  setTargetFolderId(value);
+                  setSearch(folderOptions.find((f) => f.id === value)?.path || '');
+                  combobox.closeDropdown();
+                }}
+              >
+                <Combobox.Target>
+                  <InputBase
+                    label='Target Folder'
+                    placeholder='Select a folder'
+                    rightSection={<Combobox.Chevron />}
+                    value={search || getDisplayValue()}
+                    onChange={(event) => {
+                      combobox.openDropdown();
+                      combobox.updateSelectedOptionIndex();
+                      setSearch(event.currentTarget.value);
+                    }}
+                    onClick={() => {
+                      combobox.openDropdown();
+                      setSearch('');
+                    }}
+                    onFocus={() => {
+                      combobox.openDropdown();
+                      setSearch('');
+                    }}
+                    onBlur={() => {
+                      combobox.closeDropdown();
+                      setSearch('');
+                    }}
+                    rightSectionPointerEvents='none'
+                    required
+                  />
+                </Combobox.Target>
+
+                <Combobox.Dropdown>
+                  <FolderComboboxOptions folderOptions={folderOptions} searchValue={search} />
+                </Combobox.Dropdown>
+              </Combobox>
             )}
 
             {childrenAction === 'cascade' && (

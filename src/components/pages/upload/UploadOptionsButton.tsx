@@ -325,11 +325,19 @@ export default function UploadOptionsButton({ folder, numFiles }: { folder?: str
                   combobox.updateSelectedOptionIndex();
                   setFolderSearch(event.currentTarget.value);
                 }}
-                onClick={() => combobox.openDropdown()}
-                onFocus={() => combobox.openDropdown()}
+                onClick={() => {
+                  combobox.openDropdown();
+                  setFolderSearch('');
+                }}
+                onFocus={() => {
+                  combobox.openDropdown();
+                  setFolderSearch('');
+                }}
                 onBlur={() => {
                   combobox.closeDropdown();
-                  setFolderSearch(folderSearch || '');
+                  // Restore the selected folder path when closing
+                  const selectedFolder = folderOptions.find((f) => f.id === ephemeral.folderId);
+                  setFolderSearch(selectedFolder?.path || '');
                 }}
                 placeholder='Add to folder...'
                 rightSectionPointerEvents='none'

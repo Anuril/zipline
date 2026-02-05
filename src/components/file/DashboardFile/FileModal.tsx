@@ -331,11 +331,17 @@ export default function FileModal({
                             folderCombobox.updateSelectedOptionIndex();
                             setSearch(event.currentTarget.value);
                           }}
-                          onClick={() => folderCombobox.openDropdown()}
-                          onFocus={() => folderCombobox.openDropdown()}
+                          onClick={() => {
+                            folderCombobox.openDropdown();
+                            setSearch('');
+                          }}
+                          onFocus={() => {
+                            folderCombobox.openDropdown();
+                            setSearch('');
+                          }}
                           onBlur={() => {
                             folderCombobox.closeDropdown();
-                            setSearch(search || '');
+                            setSearch('');
                           }}
                           placeholder='Add to folder...'
                           rightSectionPointerEvents='none'
