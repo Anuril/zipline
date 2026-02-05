@@ -134,9 +134,14 @@ export default function UploadOptionsButton({ folder, numFiles }: { folder?: str
   useEffect(() => {
     if (folder) return;
 
+    // Set initial value
+    if (ephemeral.folderId === null) {
+      setFolderSearch('/ (Root)');
+    }
+
     useUploadOptionsStore.subscribe(
       (state) => state.ephemeral,
-      (current) => (current.folderId === null ? setFolderSearch('') : null),
+      (current) => (current.folderId === null ? setFolderSearch('/ (Root)') : null),
     );
   }, []);
 
@@ -306,9 +311,14 @@ export default function UploadOptionsButton({ folder, numFiles }: { folder?: str
             store={combobox}
             withinPortal={false}
             onOptionSubmit={(value) => {
-              const selected = folderOptions.find((f) => f.id === value);
-              setFolderSearch(selected?.path || '');
-              setEphemeral('folderId', value === 'no folder' || value === '' ? null : value);
+              if (value === '__root__') {
+                setFolderSearch('/ (Root)');
+                setEphemeral('folderId', null);
+              } else {
+                const selected = folderOptions.find((f) => f.id === value);
+                setFolderSearch(selected?.path || '');
+                setEphemeral('folderId', value);
+              }
               combobox.closeDropdown();
             }}
             disabled={!!folder}
@@ -316,7 +326,7 @@ export default function UploadOptionsButton({ folder, numFiles }: { folder?: str
             <Combobox.Target>
               <InputBase
                 label={<>Add to a Folder</>}
-                description='Add this file to a folder. Use the "no folder" option not add the file to a folder. This value is not saved to your browser, and is cleared after uploading.'
+                description='Add this file to a folder. Use the "/ (Root)" option to not add the file to a folder. This value is not saved to your browser, and is cleared after uploading.'
                 rightSection={<Combobox.Chevron />}
                 leftSection={<IconFolderPlus size='1rem' />}
                 value={folderSearch}
@@ -336,8 +346,12 @@ export default function UploadOptionsButton({ folder, numFiles }: { folder?: str
                 onBlur={() => {
                   combobox.closeDropdown();
                   // Restore the selected folder path when closing
-                  const selectedFolder = folderOptions.find((f) => f.id === ephemeral.folderId);
-                  setFolderSearch(selectedFolder?.path || '');
+                  if (ephemeral.folderId === null) {
+                    setFolderSearch('/ (Root)');
+                  } else {
+                    const selectedFolder = folderOptions.find((f) => f.id === ephemeral.folderId);
+                    setFolderSearch(selectedFolder?.path || '');
+                  }
                 }}
                 placeholder='Add to folder...'
                 rightSectionPointerEvents='none'
@@ -348,7 +362,7 @@ export default function UploadOptionsButton({ folder, numFiles }: { folder?: str
               <FolderComboboxOptions
                 folderOptions={folderOptions}
                 searchValue={folderSearch}
-                additionalOptions={<Combobox.Option value='no folder'>No Folder</Combobox.Option>}
+                additionalOptions={<Combobox.Option value='__root__'>/ (Root)</Combobox.Option>}
               />
             </Combobox.Dropdown>
           </Combobox>
