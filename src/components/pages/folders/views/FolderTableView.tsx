@@ -1,7 +1,7 @@
 import RelativeDate from '@/components/RelativeDate';
 import { Response } from '@/lib/api/response';
 import { Folder } from '@/lib/db/models/folder';
-import { ActionIcon, Anchor, Badge, Box, Checkbox, Group, Tooltip } from '@mantine/core';
+import { ActionIcon, Badge, Box, Checkbox, Group, Text, Tooltip } from '@mantine/core';
 import { useClipboard } from '@mantine/hooks';
 import {
   IconCopy,
@@ -97,15 +97,7 @@ export default function FolderTableView({
               render: (folder) => (
                 <Group gap='xs'>
                   <IconFolder size='1rem' />
-                  <Anchor
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onNavigate(folder.id);
-                    }}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    {folder.name}
-                  </Anchor>
+                  <Text>{folder.name}</Text>
                   {(folder._count?.children ?? 0) > 0 && (
                     <Badge size='xs' variant='light'>
                       {folder._count?.children} subfolder{(folder._count?.children ?? 0) > 1 ? 's' : ''}
