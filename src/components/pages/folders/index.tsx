@@ -104,7 +104,7 @@ export default function DashboardFolders() {
       }
 
       const folderIds: string[] = [];
-      for (const f of path)  {
+      for (const f of path) {
         folderIds.push(f.id!);
         items.push({
           id: f.id!,

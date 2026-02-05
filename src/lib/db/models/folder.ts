@@ -41,7 +41,6 @@ export async function buildParentChain(parentId: string | null): Promise<FolderP
   };
 }
 
-
 export async function buildPublicParentChain(parentId: string | null): Promise<FolderParentPublic | null> {
   if (!parentId) return null;
 
